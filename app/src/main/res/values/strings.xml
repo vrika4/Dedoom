@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Descroll</string>
+
+    <string name="accessibility_service_description">Descroll monitors which apps you open to show a pause screen before distracting apps like Instagram and YouTube. It only reads app package names — no personal data is accessed.</string>
+
+    <!-- Overlay Screen -->
+    <string name="breathe_label">Take a breath…</string>
+    <string name="overlay_subtitle">Do you really need to open this?</string>
+
+    <!-- Choice Buttons -->
+    <string name="btn_reels">Reels</string>
+    <string name="btn_shorts">Shorts</string>
+    <string name="btn_messages">Messages</string>
+    <string name="btn_regular_videos">Videos</string>
+    <string name="reels_remaining">%d / %d opens left today</string>
+
+    <!-- Blocked Screen -->
+    <string name="blocked_title">Time\'s Up! 🛑</string>
+    <string name="blocked_reels_done">You\'ve watched your 5 reels.\nSession over.</string>
+    <string name="blocked_daily_limit">No more reels today.\nYou\'ve used all 10 opens.</string>
+    <string name="blocked_go_home">Go Home</string>
+    <string name="blocked_open_messages">Open for Messages Instead</string>
+
+    <!-- Main Dashboard -->
+    <string name="dashboard_title">Descroll</string>
+    <string name="dashboard_subtitle">Your digital wellbeing guardian</string>
+    <string name="stats_title">Today\'s Stats</string>
+    <string name="reels_opens_label">Reels Opens</string>
+    <string name="total_blocks_label">Times Blocked</string>
+    <string name="setup_title">Setup</string>
+    <string name="setup_accessibility">Enable Accessibility Service</string>
+    <string name="setup_accessibility_desc">Required for Descroll to detect app launches</string>
+    <string name="setup_overlay">Enable Overlay Permission</string>
+    <string name="setup_overlay_desc">Required to show the pause screen</string>
+    <string name="status_active">Active &amp; Protecting</string>
+    <string name="status_inactive">Not Active — Setup Required</string>
+    <string name="monitored_apps_title">Monitored Apps</string>
+    <string name="settings_title">Settings</string>
+    <string name="delay_duration_label">Delay Duration</string>
+    <string name="delay_seconds">%d seconds</string>
+    <string name="reels_per_session_label">Reels Per Session</string>
+    <string name="daily_opens_label">Daily Reels Opens</string>
+    <string name="session_timer_label">Session Timer</string>
+    <string name="session_timer_desc">%d min %d sec (≈ %d reels)</string>
+</resources>
