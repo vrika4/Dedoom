@@ -1,4 +1,4 @@
-name: Build Descroll APK
+name: Build Dedoom APK
 
 on:
   push:
@@ -36,34 +36,37 @@ jobs:
       - name: Prepare APKs
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk dist/Descroll.apk
-          cp app/build/outputs/apk/release/app-release.apk dist/Descroll-v1.0.0.apk
+          cp app/build/outputs/apk/release/app-release.apk dist/Dedoom.apk
+          cp app/build/outputs/apk/release/app-release.apk dist/Dedoom-v1.0.0.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Descroll-Release-APK
-          path: dist/Descroll.apk
+          name: Dedoom-Release-APK
+          path: dist/Dedoom.apk
           if-no-files-found: error
 
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v1.0.0
-          name: "Descroll v1.0.0 (Release)"
+          name: "Dedoom v1.0.0 (Release)"
           body: |
-            ### 🧘 Descroll Android App (Release Build)
+            ### 🧘 Dedoom Android App (Release Build)
             Official release APK built automatically by GitHub Actions.
 
             #### 📲 Installation Instructions:
-            1. Download **`Descroll.apk`** below directly to your device.
-            2. Open your phone's **Files** app -> **Downloads** folder.
-            3. Tap **`Descroll.apk`** to install.
+            1. Download **`Dedoom.apk`** below directly to your Android device.
+            2. If tapping the download notification in Chrome doesn't install or loops:
+               - Open your phone's **Files** (or **My Files**) app.
+               - Go to the **Downloads** folder.
+               - Tap **`Dedoom.apk`** to install.
+               - If prompted, toggle on **"Allow from this source"** / **"Install unknown apps"**.
           draft: false
           prerelease: false
           make_latest: true
           files: |
-            dist/Descroll.apk
-            dist/Descroll-v1.0.0.apk
+            dist/Dedoom.apk
+            dist/Dedoom-v1.0.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
