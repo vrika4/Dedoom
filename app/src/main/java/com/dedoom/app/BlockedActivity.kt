@@ -40,12 +40,12 @@ class BlockedActivity : AppCompatActivity() {
         val btnGoHome = findViewById<LinearLayout>(R.id.btnGoHome)
         val btnOpenMessages = findViewById<TextView>(R.id.btnOpenMessages)
 
-        if (isDailyLimit) {
+        if (isDailyLimit || tracker.isDailyLimitReached()) {
             blockedTitle.text = "Daily Limit Reached 🚫"
-            blockedMessage.text = "You've used all ${tracker.getMaxReelsOpens()} reels opens for today.\n\nCome back tomorrow, or open for messages instead."
-        } else if (isSessionExpiry) {
-            blockedTitle.text = "Session Over ⏰"
-            blockedMessage.text = "Your 5-reel session is done!\n\nTake a break or switch to messages."
+            blockedMessage.text = "You've watched your 10 reels for today.\n\nReels are blocked until tomorrow.\n\nMessages and Stories can still be accessed freely!"
+        } else {
+            blockedTitle.text = "Reels Blocked 🛑"
+            blockedMessage.text = "You've reached your limit for today.\n\nCome back tomorrow, or open for Messages and Stories instead."
         }
 
         // Record the block

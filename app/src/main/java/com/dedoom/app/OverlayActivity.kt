@@ -108,14 +108,14 @@ class OverlayActivity : AppCompatActivity() {
         }
 
         // Update remaining count
-        val remaining = tracker.getRemainingReelsOpens()
-        val max = tracker.getMaxReelsOpens()
-        btnReelsSubtext.text = "$remaining / $max opens left today"
+        val remaining = tracker.getRemainingReelsToday()
+        val max = tracker.getMaxReelsPerDay()
+        btnReelsSubtext.text = "$remaining / $max reels left today"
 
-        // If no reels opens remaining, disable the button
-        if (!tracker.canOpenReels()) {
+        // If daily limit reached, disable the button
+        if (!tracker.canWatchMoreReels()) {
             btnReels.background = getDrawable(R.drawable.bg_button_blocked)
-            btnReelsSubtext.text = "No opens left today"
+            btnReelsSubtext.text = "All 10 reels used for today"
             btnReels.alpha = 0.6f
         }
 
@@ -250,18 +250,14 @@ class OverlayActivity : AppCompatActivity() {
      * User chose "Reels/Shorts" — check limits and proceed.
      */
     private fun onReelsChosen() {
-        if (!tracker.canOpenReels()) {
-            // Daily limit reached — block
+        if (!tracker.canWatchMoreReels()) {
+            // Daily limit of 10 reels reached — block
             launchBlocked(isDailyLimit = true)
             return
         }
 
-        // Record the open and start the session timer
-        tracker.incrementReelsOpens()
-        tracker.resetReelsSwipes(targetPackage)
         tracker.setSessionMode(targetPackage, "reels")
         tracker.setGracePeriod(targetPackage)
-        tracker.startReelsTimer(targetPackage)
 
         // Let the app proceed
         finish()

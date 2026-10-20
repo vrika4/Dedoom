@@ -6,22 +6,16 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
+import android.widget.Toast
 
 /**
- * Core Accessibility Service operating on the ScrollGuard architecture:
+ * Dedoom Core Accessibility Service.
  *
- * 1. ZERO interference with messaging / chats:
- *    User can open Instagram & YouTube infinite times to chat, view messages,
- *    or search without any pause or blocking.
- *
- * 2. Surgical Reels/Shorts interception:
- *    The exact moment the user taps into Instagram Reels or YouTube Shorts:
- *    - If daily limit (10 opens) reached -> immediately kicks user out (GLOBAL_ACTION_BACK)
- *      and shows Blocked screen.
- *    - If new reels session -> immediately kicks user back and launches the 15-second
- *      breathing pause screen.
- *    - If active reels session -> counts every swipe up to 5 reels.
- *    - At 5th reel (or timer expiry) -> immediately kicks user out and shows Blocked screen.
+ * Rules:
+ * 1. Stories and Messages are NEVER blocked.
+ * 2. Counts reels up to 10 per day.
+ * 3. Once 10 reels are watched today, blocks reels completely until tomorrow.
+ * 4. Resets only on the next day (midnight).
  */
 class DedoomAccessibilityService : AccessibilityService() {
 
@@ -39,13 +33,7 @@ class DedoomAccessibilityService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private var lastScrollTime = 0L
     private var lastDetectionCheckTime = 0L
-
-    private val timerCheckRunnable = object : Runnable {
-        override fun run() {
-            checkReelsTimers()
-            handler.postDelayed(this, 1500)
-        }
-    }
+    private var isCurrentlyInReels = false
 
     override fun onCreate() {
         super.onCreate()
@@ -54,16 +42,9 @@ class DedoomAccessibilityService : AccessibilityService() {
         Log.d(TAG, "Dedoom Accessibility Service created")
     }
 
-    override fun onServiceConnected() {
-        super.onServiceConnected()
-        Log.d(TAG, "Dedoom Accessibility Service connected")
-        handler.post(timerCheckRunnable)
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         instance = null
-        handler.removeCallbacks(timerCheckRunnable)
         Log.d(TAG, "Dedoom Accessibility Service destroyed")
     }
 
@@ -75,38 +56,24 @@ class DedoomAccessibilityService : AccessibilityService() {
 
         when (event.eventType) {
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
-                val previousPackage = currentForegroundPackage
                 currentForegroundPackage = packageName
 
-                // If user left monitored app entirely, clear session grace
-                if (previousPackage != null &&
-                    previousPackage != packageName &&
-                    previousPackage in tracker.getMonitoredPackages()
-                ) {
-                    if (packageName != "com.dedoom.app" && packageName != this.packageName) {
-                        Log.d(TAG, "User exited $previousPackage -> clearing session")
-                        tracker.clearGracePeriod(previousPackage)
-                    }
-                }
-
                 if (packageName in tracker.getMonitoredPackages()) {
-                    checkReelInterception(packageName)
+                    checkReelsStatus(packageName)
                 }
             }
 
             AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
-                // Live detection when navigating into Reels/Shorts tab
                 if (packageName in tracker.getMonitoredPackages()) {
                     val now = System.currentTimeMillis()
-                    if (now - lastDetectionCheckTime > 300L) { // Throttle inspections
+                    if (now - lastDetectionCheckTime > 400L) {
                         lastDetectionCheckTime = now
-                        checkReelInterception(packageName)
+                        checkReelsStatus(packageName)
                     }
                 }
             }
 
             AccessibilityEvent.TYPE_VIEW_SCROLLED -> {
-                // Track reels swipes when inside reels
                 if (packageName in tracker.getMonitoredPackages()) {
                     handleReelSwipe(packageName)
                 }
@@ -119,106 +86,84 @@ class DedoomAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Inspects active screen nodes to determine if Reels/Shorts are on screen.
+     * Inspects active window to detect if user is in Reels or Shorts.
      */
-    private fun checkReelInterception(packageName: String) {
+    private fun checkReelsStatus(packageName: String) {
         val rootNode = rootInActiveWindow ?: return
-        val isReel = ReelDetector.isViewingReelsOrShorts(rootNode, packageName)
+        val isReels = ReelDetector.isViewingReelsOrShorts(rootNode, packageName)
 
-        if (!isReel) {
-            // User is in Messages, Feed, Search, or Profile -> ZERO BLOCKING
+        if (!isReels) {
+            // User is in Messages, Stories, Home feed, or Profile -> NEVER BLOCK
+            isCurrentlyInReels = false
             return
         }
 
-        Log.d(TAG, "Reels detected in $packageName")
-
-        // 1. Daily Limit Check: Already used 10 reels opens today?
-        if (!tracker.canOpenReels()) {
-            Log.d(TAG, "Daily reels limit reached! Kicking out of reels...")
+        // 1. If daily limit of 10 reels is reached: BLOCK IMMEDIATELY
+        if (tracker.isDailyLimitReached()) {
+            Log.d(TAG, "Daily limit of 10 reels reached! Blocking reels...")
+            isCurrentlyInReels = false
             performGlobalAction(GLOBAL_ACTION_BACK)
-            launchBlockedScreen(packageName, isDailyLimit = true)
+            launchBlockedScreen(packageName)
             return
         }
 
-        // 2. Active Session Check: Is the user authorized in an active 5-reel session?
-        val inSession = tracker.isInGracePeriod(packageName) &&
-                tracker.getSessionMode(packageName) == "reels" &&
-                !tracker.isReelsTimerExpired(packageName)
+        // 2. If entering reels for the first time in this session, count reel #1
+        if (!isCurrentlyInReels) {
+            isCurrentlyInReels = true
+            val count = tracker.incrementReelWatched()
+            Log.d(TAG, "Started watching Reel #$count / ${tracker.getMaxReelsPerDay()}")
 
-        if (!inSession) {
-            // New Reels access! Kick back and require the 15-second pause
-            Log.d(TAG, "New reels session attempt -> triggering 15s breathing delay")
-            performGlobalAction(GLOBAL_ACTION_BACK)
-            launchOverlay(packageName)
-        }
-    }
-
-    /**
-     * Handles scroll/swipe events while viewing reels.
-     */
-    private fun handleReelSwipe(packageName: String) {
-        val rootNode = rootInActiveWindow ?: return
-        if (!ReelDetector.isViewingReelsOrShorts(rootNode, packageName)) return
-
-        val now = System.currentTimeMillis()
-        if (now - lastScrollTime > 1200L) { // Debounce swipe gesture
-            lastScrollTime = now
-            val currentSwipes = tracker.incrementReelsSwipes(packageName)
-            val maxSwipes = tracker.getMaxReelsPerSession()
-            Log.d(TAG, "Reels swiped: $currentSwipes / $maxSwipes")
-
-            if (currentSwipes >= maxSwipes) {
-                Log.d(TAG, "5 Reels limit reached! Bouncing user out...")
+            if (count >= tracker.getMaxReelsPerDay()) {
                 performGlobalAction(GLOBAL_ACTION_BACK)
-                launchBlockedScreen(packageName, isSessionExpiry = true)
+                launchBlockedScreen(packageName)
+            } else {
+                showToast("Reel $count of ${tracker.getMaxReelsPerDay()} today")
             }
         }
     }
 
     /**
-     * Launches the 15-second delay overlay screen.
+     * Handles scrolling/swiping between reels.
      */
-    private fun launchOverlay(packageName: String) {
-        val intent = Intent(this, OverlayActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-            putExtra(OverlayActivity.EXTRA_TARGET_PACKAGE, packageName)
+    private fun handleReelSwipe(packageName: String) {
+        val rootNode = rootInActiveWindow ?: return
+        if (!ReelDetector.isViewingReelsOrShorts(rootNode, packageName)) {
+            isCurrentlyInReels = false
+            return
         }
-        startActivity(intent)
+
+        val now = System.currentTimeMillis()
+        if (now - lastScrollTime > 2000L) { // Debounce swipe gesture: at least 2s between swipes
+            lastScrollTime = now
+            val count = tracker.incrementReelWatched()
+            Log.d(TAG, "Swiped to Reel #$count / ${tracker.getMaxReelsPerDay()}")
+
+            if (count >= tracker.getMaxReelsPerDay()) {
+                Log.d(TAG, "10 Reels limit reached! Blocking...")
+                isCurrentlyInReels = false
+                performGlobalAction(GLOBAL_ACTION_BACK)
+                launchBlockedScreen(packageName)
+            } else {
+                showToast("Reel $count of ${tracker.getMaxReelsPerDay()} today")
+            }
+        }
     }
 
-    /**
-     * Launches the blocked screen when reels limit is reached.
-     */
-    private fun launchBlockedScreen(
-        packageName: String,
-        isSessionExpiry: Boolean = false,
-        isDailyLimit: Boolean = false
-    ) {
+    private fun showToast(msg: String) {
+        handler.post {
+            Toast.makeText(applicationContext, msg, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun launchBlockedScreen(packageName: String) {
         tracker.incrementBlocks()
-        tracker.clearGracePeriod(packageName)
 
         val intent = Intent(this, BlockedActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             putExtra(BlockedActivity.EXTRA_TARGET_PACKAGE, packageName)
-            putExtra(BlockedActivity.EXTRA_IS_SESSION_EXPIRY, isSessionExpiry)
-            putExtra(BlockedActivity.EXTRA_IS_DAILY_LIMIT, isDailyLimit || !tracker.canOpenReels())
+            putExtra(BlockedActivity.EXTRA_IS_DAILY_LIMIT, true)
         }
         startActivity(intent)
-    }
-
-    /**
-     * Checks if active session timer has expired.
-     */
-    private fun checkReelsTimers() {
-        val current = currentForegroundPackage ?: return
-        if (current !in tracker.getMonitoredPackages()) return
-
-        val mode = tracker.getSessionMode(current)
-        if (mode == "reels" && tracker.isReelsTimerExpired(current)) {
-            Log.d(TAG, "Session timer expired for $current!")
-            performGlobalAction(GLOBAL_ACTION_BACK)
-            launchBlockedScreen(current, isSessionExpiry = true)
-        }
     }
 
     private fun isSystemPackage(packageName: String): Boolean {

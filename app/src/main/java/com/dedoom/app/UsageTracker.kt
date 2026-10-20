@@ -62,31 +62,42 @@ class UsageTracker(context: Context) {
         }
     }
 
-    // ─── Reels Opens ──────────────────────────────────────────────
+    // ─── Reels Daily Limit (10 reels per day) ─────────────────────
 
-    fun getReelsOpensToday(): Int {
+    fun getReelsWatchedToday(): Int {
         checkAndResetIfNewDay()
         return prefs.getInt(KEY_REELS_OPENS_TODAY, 0)
     }
 
-    fun incrementReelsOpens(): Int {
+    fun incrementReelWatched(): Int {
         checkAndResetIfNewDay()
-        val current = getReelsOpensToday() + 1
+        val current = getReelsWatchedToday() + 1
         prefs.edit().putInt(KEY_REELS_OPENS_TODAY, current).apply()
         return current
     }
 
-    fun getMaxReelsOpens(): Int {
+    fun getMaxReelsPerDay(): Int {
         return prefs.getInt(KEY_MAX_REELS_OPENS, DEFAULT_MAX_REELS_OPENS)
     }
 
-    fun canOpenReels(): Boolean {
-        return getReelsOpensToday() < getMaxReelsOpens()
+    fun canWatchMoreReels(): Boolean {
+        return getReelsWatchedToday() < getMaxReelsPerDay()
     }
 
-    fun getRemainingReelsOpens(): Int {
-        return (getMaxReelsOpens() - getReelsOpensToday()).coerceAtLeast(0)
+    fun isDailyLimitReached(): Boolean {
+        return getReelsWatchedToday() >= getMaxReelsPerDay()
     }
+
+    fun getRemainingReelsToday(): Int {
+        return (getMaxReelsPerDay() - getReelsWatchedToday()).coerceAtLeast(0)
+    }
+
+    // Compatibility aliases for dashboard
+    fun getReelsOpensToday(): Int = getReelsWatchedToday()
+    fun incrementReelsOpens(): Int = incrementReelWatched()
+    fun getMaxReelsOpens(): Int = getMaxReelsPerDay()
+    fun canOpenReels(): Boolean = canWatchMoreReels()
+    fun getRemainingReelsOpens(): Int = getRemainingReelsToday()
 
     // ─── Blocks ──────────────────────────────────────────────────
 

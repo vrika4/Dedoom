@@ -3,33 +3,60 @@ package com.dedoom.app
 import android.view.accessibility.AccessibilityNodeInfo
 
 /**
- * Intelligent detector for Instagram Reels and YouTube Shorts
- * via AccessibilityNodeInfo inspection (similar to ScrollGuard / AntiScroll).
+ * Intelligent detector for Instagram Reels and YouTube Shorts.
+ *
+ * Strict Rules:
+ * 1. Stories MUST NEVER be detected as Reels.
+ *    Instagram Stories use reel_viewer, reel_feed_timeline, stories_tray, etc.
+ * 2. Messages/Direct DMs MUST NEVER be detected as Reels.
+ * 3. Bottom navigation bar items (e.g. tab icon with description "Reels") MUST NOT
+ *    cause the home feed, search, or profile to be detected as Reels.
+ * 4. Only an active, full-screen Reels/Shorts video player container is detected.
  */
 object ReelDetector {
 
-    // Instagram identifiers
-    private val INSTAGRAM_REEL_KEYWORDS = listOf(
-        "clips_viewer",
+    // View IDs that strictly identify Instagram Stories (EXCLUDED)
+    private val INSTAGRAM_STORY_MARKERS = listOf(
         "reel_viewer",
-        "clips_video_container",
-        "layout_clips_viewer",
-        "clips_carousel_view",
-        "reel_feed_timeline"
+        "reel_feed_timeline",
+        "stories_tray",
+        "reel_viewer_framelayout",
+        "reel_viewer_shadow",
+        "reel_viewer_media_layout",
+        "story_item"
     )
 
-    // YouTube identifiers
-    private val YOUTUBE_SHORTS_KEYWORDS = listOf(
-        "reel_watch_fragment",
-        "reel_recycler",
+    // View IDs that strictly identify Instagram Messages / Direct DMs (EXCLUDED)
+    private val INSTAGRAM_MESSAGE_MARKERS = listOf(
+        "direct_",
+        "thread_",
+        "inbox_",
+        "message_"
+    )
+
+    // View IDs that identify active Instagram Reels video player containers
+    private val INSTAGRAM_REELS_CONTAINERS = listOf(
+        "clips_viewer",
+        "layout_clips_viewer",
+        "clips_video_container",
+        "clips_carousel_view",
+        "clips_pager",
+        "clips_media_item",
+        "clips_swipe_refresh_container"
+    )
+
+    // View IDs that identify YouTube Shorts player containers
+    private val YOUTUBE_SHORTS_CONTAINERS = listOf(
+        "shorts_video_player",
+        "shorts_player_fragment",
         "shorts_container",
-        "reel_player_fragment",
-        "shorts_shelf",
-        "shorts_video_player"
+        "reel_watch_fragment"
     )
 
     /**
-     * Checks if the active window in Instagram or YouTube is currently showing Reels/Shorts.
+     * Checks if the active window is viewing Reels or Shorts.
+     * Returns true ONLY if the user is actively watching a Reel or Short.
+     * Always returns false for Stories, Messages, Feeds, Profile, Search.
      */
     fun isViewingReelsOrShorts(rootNode: AccessibilityNodeInfo?, packageName: String): Boolean {
         if (rootNode == null) return false
@@ -41,60 +68,94 @@ object ReelDetector {
         }
     }
 
-    private fun checkInstagramReels(node: AccessibilityNodeInfo): Boolean {
-        // Fast resource ID check
-        for (keyword in INSTAGRAM_REEL_KEYWORDS) {
-            val matching = node.findAccessibilityNodeInfosByViewId("com.instagram.android:id/$keyword")
-            if (matching.isNotEmpty()) {
-                matching.forEach { it.recycle() }
-                return true
+    private fun checkInstagramReels(root: AccessibilityNodeInfo): Boolean {
+        var isStory = false
+        var isMessage = false
+        var isReelContainer = false
+        var hasReelCreatorTag = false
+
+        traverseNodes(root, depth = 0, maxDepth = 7) { node ->
+            val viewId = node.viewIdResourceName?.lowercase() ?: ""
+            val desc = node.contentDescription?.toString()?.lowercase() ?: ""
+
+            // 1. Stories check
+            if (INSTAGRAM_STORY_MARKERS.any { viewId.contains(it) } ||
+                desc.contains("story by") || desc == "stories"
+            ) {
+                isStory = true
             }
+
+            // 2. Direct Messages check
+            if (INSTAGRAM_MESSAGE_MARKERS.any { viewId.contains(it) }) {
+                isMessage = true
+            }
+
+            // Exclude bottom navigation bar items so home feed is not flagged
+            val isNavigationTab = viewId.contains("tab_bar") ||
+                    viewId.contains("tab_reels") ||
+                    viewId.contains("navigation_bar") ||
+                    viewId.contains("bb_navigation")
+
+            if (!isNavigationTab) {
+                if (INSTAGRAM_REELS_CONTAINERS.any { viewId.contains(it) }) {
+                    isReelContainer = true
+                }
+                if (desc.startsWith("reel by ") || desc.startsWith("audio: ")) {
+                    hasReelCreatorTag = true
+                }
+            }
+
+            false // Continue traversal to ensure stories/messages markers are not missed
         }
 
-        // Deep recursive search for clips/reels markers
-        return traverseNodes(node, depth = 0, maxDepth = 6) { curr ->
-            val viewId = curr.viewIdResourceName?.lowercase() ?: ""
-            val desc = curr.contentDescription?.toString()?.lowercase() ?: ""
-
-            INSTAGRAM_REEL_KEYWORDS.any { viewId.contains(it) } ||
-                    desc == "reels" || desc.startsWith("reel by")
+        // Stories and Messages must NEVER be blocked
+        if (isStory || isMessage) {
+            return false
         }
+
+        return isReelContainer || hasReelCreatorTag
     }
 
-    private fun checkYouTubeShorts(node: AccessibilityNodeInfo): Boolean {
-        // Fast resource ID check
-        for (keyword in YOUTUBE_SHORTS_KEYWORDS) {
-            val matching = node.findAccessibilityNodeInfosByViewId("com.google.android.youtube:id/$keyword")
-            if (matching.isNotEmpty()) {
-                matching.forEach { it.recycle() }
-                return true
+    private fun checkYouTubeShorts(root: AccessibilityNodeInfo): Boolean {
+        var isShortsContainer = false
+
+        traverseNodes(root, depth = 0, maxDepth = 7) { node ->
+            val viewId = node.viewIdResourceName?.lowercase() ?: ""
+            val desc = node.contentDescription?.toString()?.lowercase() ?: ""
+
+            // Exclude bottom navigation bar "Shorts" tab button
+            val isNavigationTab = viewId.contains("pivot_bar") ||
+                    viewId.contains("bottom_nav") ||
+                    viewId.contains("tab")
+
+            if (!isNavigationTab) {
+                if (YOUTUBE_SHORTS_CONTAINERS.any { viewId.contains(it) }) {
+                    isShortsContainer = true
+                }
+                if (desc.startsWith("shorts player") || desc.contains("short by")) {
+                    isShortsContainer = true
+                }
             }
+
+            false
         }
 
-        // Deep recursive search for shorts markers
-        return traverseNodes(node, depth = 0, maxDepth = 6) { curr ->
-            val viewId = curr.viewIdResourceName?.lowercase() ?: ""
-            val desc = curr.contentDescription?.toString()?.lowercase() ?: ""
-
-            YOUTUBE_SHORTS_KEYWORDS.any { viewId.contains(it) } ||
-                    desc == "shorts" || desc.startsWith("shorts player")
-        }
+        return isShortsContainer
     }
 
     private fun traverseNodes(
         node: AccessibilityNodeInfo,
         depth: Int,
         maxDepth: Int,
-        matcher: (AccessibilityNodeInfo) -> Boolean
+        inspector: (AccessibilityNodeInfo) -> Boolean
     ): Boolean {
         if (depth > maxDepth) return false
-        if (matcher(node)) return true
+        if (inspector(node)) return true
 
         for (i in 0 until node.childCount) {
             val child = node.getChild(i) ?: continue
             try {
-                if (traverseNodes(child, depth + 1, maxDepth, matcher)) {
-                    child.recycle()
+                if (traverseNodes(child, depth + 1, maxDepth, inspector)) {
                     return true
                 }
             } finally {

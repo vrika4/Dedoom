@@ -13,20 +13,20 @@
     <string name="btn_shorts">Shorts</string>
     <string name="btn_messages">Messages</string>
     <string name="btn_regular_videos">Videos</string>
-    <string name="reels_remaining">%d / %d opens left today</string>
+    <string name="reels_remaining">%d / %d reels left today</string>
 
     <!-- Blocked Screen -->
     <string name="blocked_title">Time\'s Up! 🛑</string>
-    <string name="blocked_reels_done">You\'ve watched your 5 reels.\nSession over.</string>
-    <string name="blocked_daily_limit">No more reels today.\nYou\'ve used all 10 opens.</string>
+    <string name="blocked_reels_done">You\'ve watched your 10 reels.\nReels locked until tomorrow.</string>
+    <string name="blocked_daily_limit">No more reels today.\nYou\'ve watched all 10 reels.\nMessages &amp; Stories can still be seen freely!</string>
     <string name="blocked_go_home">Go Home</string>
-    <string name="blocked_open_messages">Open for Messages Instead</string>
+    <string name="blocked_open_messages">Open Messages &amp; Stories Instead</string>
 
     <!-- Main Dashboard -->
     <string name="dashboard_title">Dedoom</string>
     <string name="dashboard_subtitle">Your digital wellbeing guardian</string>
     <string name="stats_title">Today\'s Stats</string>
-    <string name="reels_opens_label">Reels Opens</string>
+    <string name="reels_opens_label">Reels Watched Today</string>
     <string name="total_blocks_label">Times Blocked</string>
     <string name="setup_title">Setup</string>
     <string name="setup_accessibility">Enable Accessibility Service</string>
