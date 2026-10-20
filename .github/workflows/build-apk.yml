@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    name: Build Debug APK
+    name: Build Release APK
     runs-on: ubuntu-latest
 
     steps:
@@ -28,30 +28,42 @@ jobs:
         with:
           gradle-version: '8.4'
 
-      - name: Build Debug APK
-        run: gradle assembleDebug --stacktrace
+      - name: Build Release APK
+        run: gradle assembleRelease --stacktrace
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
+
+      - name: Prepare APKs
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/release/app-release.apk dist/Descroll.apk
+          cp app/build/outputs/apk/release/app-release.apk dist/Descroll-v1.0.0.apk
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Descroll-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: Descroll-Release-APK
+          path: dist/Descroll.apk
           if-no-files-found: error
 
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
-        continue-on-error: true
         with:
           tag_name: v1.0.0
-          name: "Descroll v1.0.0 APK"
+          name: "Descroll v1.0.0 (Release)"
           body: |
-            ### 🧘 Descroll Android APK
-            Built automatically by GitHub Actions.
-            Download `app-debug.apk` below directly to your Android device.
+            ### 🧘 Descroll Android App (Release Build)
+            Official release APK built automatically by GitHub Actions.
+
+            #### 📲 Installation Instructions:
+            1. Download **`Descroll.apk`** below directly to your device.
+            2. Open your phone's **Files** app -> **Downloads** folder.
+            3. Tap **`Descroll.apk`** to install.
           draft: false
           prerelease: false
-          files: app/build/outputs/apk/debug/app-debug.apk
+          make_latest: true
+          files: |
+            dist/Descroll.apk
+            dist/Descroll-v1.0.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
