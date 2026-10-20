@@ -13,14 +13,14 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Descroll"
+        android:theme="@style/Theme.Dedoom"
         tools:targetApi="34">
 
         <!-- Main Dashboard -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Descroll">
+            android:theme="@style/Theme.Dedoom">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -31,23 +31,23 @@
         <activity
             android:name=".OverlayActivity"
             android:exported="false"
-            android:theme="@style/Theme.Descroll.Overlay"
+            android:theme="@style/Theme.Dedoom.Overlay"
             android:excludeFromRecents="true"
             android:launchMode="singleTop"
-            android:taskAffinity="com.descroll.overlay" />
+            android:taskAffinity="com.dedoom.overlay" />
 
         <!-- Blocked Screen (reels limit reached) -->
         <activity
             android:name=".BlockedActivity"
             android:exported="false"
-            android:theme="@style/Theme.Descroll.Overlay"
+            android:theme="@style/Theme.Dedoom.Overlay"
             android:excludeFromRecents="true"
             android:launchMode="singleTop"
-            android:taskAffinity="com.descroll.blocked" />
+            android:taskAffinity="com.dedoom.blocked" />
 
         <!-- Accessibility Service (core engine) -->
         <service
-            android:name=".DescrollAccessibilityService"
+            android:name=".DedoomAccessibilityService"
             android:exported="false"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>

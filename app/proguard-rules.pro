@@ -1,2 +1,2 @@
-# Proguard rules for Descroll
+# Proguard rules for Dedoom
 -keepattributes *Annotation*

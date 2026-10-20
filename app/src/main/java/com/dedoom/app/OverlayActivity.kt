@@ -1,4 +1,4 @@
-package com.descroll.app
+package com.dedoom.app
 
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator

@@ -1,4 +1,4 @@
-package com.descroll.app
+package com.dedoom.app
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
@@ -23,15 +23,15 @@ import android.view.accessibility.AccessibilityEvent
  *    - If active reels session -> counts every swipe up to 5 reels.
  *    - At 5th reel (or timer expiry) -> immediately kicks user out and shows Blocked screen.
  */
-class DescrollAccessibilityService : AccessibilityService() {
+class DedoomAccessibilityService : AccessibilityService() {
 
     companion object {
-        private const val TAG = "DescrollService"
+        private const val TAG = "DedoomService"
 
         var currentForegroundPackage: String? = null
             private set
 
-        var instance: DescrollAccessibilityService? = null
+        var instance: DedoomAccessibilityService? = null
             private set
     }
 
@@ -51,12 +51,12 @@ class DescrollAccessibilityService : AccessibilityService() {
         super.onCreate()
         instance = this
         tracker = UsageTracker(this)
-        Log.d(TAG, "Descroll Accessibility Service created (ScrollGuard engine)")
+        Log.d(TAG, "Dedoom Accessibility Service created")
     }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        Log.d(TAG, "Descroll Accessibility Service connected")
+        Log.d(TAG, "Dedoom Accessibility Service connected")
         handler.post(timerCheckRunnable)
     }
 
@@ -64,7 +64,7 @@ class DescrollAccessibilityService : AccessibilityService() {
         super.onDestroy()
         instance = null
         handler.removeCallbacks(timerCheckRunnable)
-        Log.d(TAG, "Descroll Accessibility Service destroyed")
+        Log.d(TAG, "Dedoom Accessibility Service destroyed")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -83,7 +83,7 @@ class DescrollAccessibilityService : AccessibilityService() {
                     previousPackage != packageName &&
                     previousPackage in tracker.getMonitoredPackages()
                 ) {
-                    if (packageName != "com.descroll.app") {
+                    if (packageName != "com.dedoom.app" && packageName != this.packageName) {
                         Log.d(TAG, "User exited $previousPackage -> clearing session")
                         tracker.clearGracePeriod(previousPackage)
                     }
@@ -115,7 +115,7 @@ class DescrollAccessibilityService : AccessibilityService() {
     }
 
     override fun onInterrupt() {
-        Log.d(TAG, "Descroll Accessibility Service interrupted")
+        Log.d(TAG, "Dedoom Accessibility Service interrupted")
     }
 
     /**
@@ -225,7 +225,8 @@ class DescrollAccessibilityService : AccessibilityService() {
         return packageName.startsWith("com.android.") ||
                 packageName.startsWith("com.samsung.") ||
                 packageName.startsWith("com.sec.") ||
-                packageName == "com.descroll.app" ||
+                packageName == "com.dedoom.app" ||
+                packageName == this.packageName ||
                 packageName == "android" ||
                 packageName.contains("launcher") ||
                 packageName.contains("systemui") ||

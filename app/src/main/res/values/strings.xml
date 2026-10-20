@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Descroll</string>
+    <string name="app_name">Dedoom</string>
 
-    <string name="accessibility_service_description">Descroll monitors which apps you open to show a pause screen before distracting apps like Instagram and YouTube. It only reads app package names — no personal data is accessed.</string>
+    <string name="accessibility_service_description">Dedoom monitors which apps you open to show a pause screen before distracting apps like Instagram and YouTube. It only reads app package names — no personal data is accessed.</string>
 
     <!-- Overlay Screen -->
     <string name="breathe_label">Take a breath…</string>
@@ -23,14 +23,14 @@
     <string name="blocked_open_messages">Open for Messages Instead</string>
 
     <!-- Main Dashboard -->
-    <string name="dashboard_title">Descroll</string>
+    <string name="dashboard_title">Dedoom</string>
     <string name="dashboard_subtitle">Your digital wellbeing guardian</string>
     <string name="stats_title">Today\'s Stats</string>
     <string name="reels_opens_label">Reels Opens</string>
     <string name="total_blocks_label">Times Blocked</string>
     <string name="setup_title">Setup</string>
     <string name="setup_accessibility">Enable Accessibility Service</string>
-    <string name="setup_accessibility_desc">Required for Descroll to detect app launches</string>
+    <string name="setup_accessibility_desc">Required for Dedoom to detect app launches</string>
     <string name="setup_overlay">Enable Overlay Permission</string>
     <string name="setup_overlay_desc">Required to show the pause screen</string>
     <string name="status_active">Active &amp; Protecting</string>

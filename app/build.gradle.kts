@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.descroll.app"
+    namespace = "com.dedoom.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.descroll.app"
+        applicationId = "com.dedoom.app"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

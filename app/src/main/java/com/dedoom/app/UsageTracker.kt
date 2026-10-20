@@ -1,4 +1,4 @@
-package com.descroll.app
+package com.dedoom.app
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -13,7 +13,7 @@ import java.util.*
 class UsageTracker(context: Context) {
 
     companion object {
-        private const val PREFS_NAME = "descroll_prefs"
+        private const val PREFS_NAME = "dedoom_prefs"
 
         // Daily tracking
         private const val KEY_REELS_OPENS_TODAY = "reels_opens_today"

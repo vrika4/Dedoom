@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Descroll"
+rootProject.name = "Dedoom"
 include(":app")

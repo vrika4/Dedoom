@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Base app theme -->
-    <style name="Theme.Descroll" parent="Theme.Material3.Dark.NoActionBar">
+    <style name="Theme.Dedoom" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/purple_primary</item>
         <item name="colorPrimaryDark">@color/purple_dark</item>
         <item name="colorAccent">@color/cyan_accent</item>
@@ -11,7 +11,7 @@
     </style>
 
     <!-- Overlay theme (translucent, fullscreen) -->
-    <style name="Theme.Descroll.Overlay">
+    <style name="Theme.Dedoom.Overlay">
         <item name="android:windowIsTranslucent">false</item>
         <item name="android:windowBackground">@color/overlay_bg</item>
         <item name="android:windowNoTitle">true</item>
