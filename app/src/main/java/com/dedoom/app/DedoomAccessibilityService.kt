@@ -13,9 +13,10 @@ import android.widget.Toast
  *
  * Rules:
  * 1. Stories and Messages are NEVER blocked.
- * 2. Counts reels up to 10 per day.
- * 3. Once 10 reels are watched today, blocks reels completely until tomorrow.
- * 4. Resets only on the next day (midnight).
+ * 2. Allows watching up to 10 distinct reels per day.
+ * 3. Hysteresis & Signature tracking prevent false rapid increments or shutting down after 1 reel.
+ * 4. Once 10 reels are watched today, blocks reels completely until tomorrow.
+ * 5. Resets only on the next day (midnight).
  */
 class DedoomAccessibilityService : AccessibilityService() {
 
@@ -31,9 +32,13 @@ class DedoomAccessibilityService : AccessibilityService() {
 
     private lateinit var tracker: UsageTracker
     private val handler = Handler(Looper.getMainLooper())
+
     private var lastScrollTime = 0L
     private var lastDetectionCheckTime = 0L
     private var isCurrentlyInReels = false
+    private var lastReelSignature: String? = null
+    private var reelsEntryTime = 0L
+    private var consecutiveNonReelsFrames = 0
 
     override fun onCreate() {
         super.onCreate()
@@ -66,7 +71,7 @@ class DedoomAccessibilityService : AccessibilityService() {
             AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
                 if (packageName in tracker.getMonitoredPackages()) {
                     val now = System.currentTimeMillis()
-                    if (now - lastDetectionCheckTime > 400L) {
+                    if (now - lastDetectionCheckTime > 500L) {
                         lastDetectionCheckTime = now
                         checkReelsStatus(packageName)
                     }
@@ -93,10 +98,18 @@ class DedoomAccessibilityService : AccessibilityService() {
         val isReels = ReelDetector.isViewingReelsOrShorts(rootNode, packageName)
 
         if (!isReels) {
-            // User is in Messages, Stories, Home feed, or Profile -> NEVER BLOCK
-            isCurrentlyInReels = false
+            // Hysteresis: Require 3 consecutive non-reels frames before marking as exited
+            // This prevents UI loading hiccups from causing false session exits and re-entries
+            consecutiveNonReelsFrames++
+            if (consecutiveNonReelsFrames >= 3) {
+                isCurrentlyInReels = false
+                lastReelSignature = null
+            }
             return
         }
+
+        consecutiveNonReelsFrames = 0
+        val now = System.currentTimeMillis()
 
         // 1. If daily limit of 10 reels is reached: BLOCK IMMEDIATELY
         if (tracker.isDailyLimitReached()) {
@@ -107,9 +120,14 @@ class DedoomAccessibilityService : AccessibilityService() {
             return
         }
 
-        // 2. If entering reels for the first time in this session, count reel #1
+        val currentSignature = ReelDetector.getReelSignature(rootNode, packageName)
+
+        // 2. If entering reels for the first time in this session
         if (!isCurrentlyInReels) {
             isCurrentlyInReels = true
+            reelsEntryTime = now
+            lastReelSignature = currentSignature
+
             val count = tracker.incrementReelWatched()
             Log.d(TAG, "Started watching Reel #$count / ${tracker.getMaxReelsPerDay()}")
 
@@ -119,33 +137,38 @@ class DedoomAccessibilityService : AccessibilityService() {
             } else {
                 showToast("Reel $count of ${tracker.getMaxReelsPerDay()} today")
             }
+        } else {
+            // 3. User is already in reels. If signature changed and user stayed on reel >= 3.5s, count next reel
+            if (currentSignature != null && currentSignature != lastReelSignature && (now - reelsEntryTime >= 3500L)) {
+                lastReelSignature = currentSignature
+                reelsEntryTime = now
+
+                val count = tracker.incrementReelWatched()
+                Log.d(TAG, "Advanced to Reel #$count / ${tracker.getMaxReelsPerDay()}")
+
+                if (count >= tracker.getMaxReelsPerDay()) {
+                    performGlobalAction(GLOBAL_ACTION_BACK)
+                    launchBlockedScreen(packageName)
+                } else {
+                    showToast("Reel $count of ${tracker.getMaxReelsPerDay()} today")
+                }
+            }
         }
     }
 
     /**
-     * Handles scrolling/swiping between reels.
+     * Handles scrolling/swiping between reels with debouncing and signature validation.
      */
     private fun handleReelSwipe(packageName: String) {
         val rootNode = rootInActiveWindow ?: return
         if (!ReelDetector.isViewingReelsOrShorts(rootNode, packageName)) {
-            isCurrentlyInReels = false
             return
         }
 
         val now = System.currentTimeMillis()
-        if (now - lastScrollTime > 2000L) { // Debounce swipe gesture: at least 2s between swipes
+        if (now - lastScrollTime > 3500L) { // Minimum 3.5 seconds between swipes
             lastScrollTime = now
-            val count = tracker.incrementReelWatched()
-            Log.d(TAG, "Swiped to Reel #$count / ${tracker.getMaxReelsPerDay()}")
-
-            if (count >= tracker.getMaxReelsPerDay()) {
-                Log.d(TAG, "10 Reels limit reached! Blocking...")
-                isCurrentlyInReels = false
-                performGlobalAction(GLOBAL_ACTION_BACK)
-                launchBlockedScreen(packageName)
-            } else {
-                showToast("Reel $count of ${tracker.getMaxReelsPerDay()} today")
-            }
+            checkReelsStatus(packageName)
         }
     }
 
