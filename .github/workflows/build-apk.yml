@@ -3,6 +3,7 @@ name: Build Dedoom APK
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   workflow_dispatch:
 
 permissions:
@@ -30,14 +31,19 @@ jobs:
 
       - name: Build Release APK
         run: gradle assembleRelease --stacktrace
-        env:
-          ANDROID_HOME: /usr/local/lib/android/sdk
 
       - name: Prepare APKs
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/release/app-release.apk dist/Dedoom.apk
-          cp app/build/outputs/apk/release/app-release.apk dist/Dedoom-v1.0.0.apk
+          # Copy whatever release APK Gradle produced
+          APK_FILE=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$APK_FILE" ]; then
+            echo "Error: No APK found in app/build/outputs/apk/release/"
+            exit 1
+          fi
+          cp "$APK_FILE" dist/Dedoom.apk
+          cp "$APK_FILE" dist/Dedoom-v1.0.0.apk
+          ls -lh dist/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
@@ -49,7 +55,8 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.0
+          tag_name: ${{ github.ref_name != 'main' && github.ref_name || 'v1.0.0' }}
+          target_commitish: ${{ github.sha }}
           name: "Dedoom v1.0.0 (Release)"
           body: |
             ### 🧘 Dedoom Android App (Release Build)
