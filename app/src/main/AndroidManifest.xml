@@ -4,6 +4,7 @@
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
@@ -13,41 +14,32 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Dedoom"
+        android:theme="@style/Theme.Descroll"
         tools:targetApi="34">
 
         <!-- Main Dashboard -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.Dedoom">
+            android:theme="@style/Theme.Descroll">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <!-- 15-sec Delay + Choice Screen -->
-        <activity
-            android:name=".OverlayActivity"
-            android:exported="false"
-            android:theme="@style/Theme.Dedoom.Overlay"
-            android:excludeFromRecents="true"
-            android:launchMode="singleTop"
-            android:taskAffinity="com.dedoom.overlay" />
-
-        <!-- Blocked Screen (reels limit reached) -->
+        <!-- Blocked Screen (Shown immediately when 10 reels limit is hit) -->
         <activity
             android:name=".BlockedActivity"
             android:exported="false"
-            android:theme="@style/Theme.Dedoom.Overlay"
+            android:theme="@style/Theme.Descroll.Overlay"
             android:excludeFromRecents="true"
             android:launchMode="singleTop"
-            android:taskAffinity="com.dedoom.blocked" />
+            android:taskAffinity="com.descroll.blocked" />
 
-        <!-- Accessibility Service (core engine) -->
+        <!-- Accessibility Service (ScrollGuard / Scrolless engine) -->
         <service
-            android:name=".DedoomAccessibilityService"
+            android:name=".DescrollAccessibilityService"
             android:exported="false"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>

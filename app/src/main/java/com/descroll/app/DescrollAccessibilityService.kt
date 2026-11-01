@@ -1,4 +1,4 @@
-package com.dedoom.app
+package com.descroll.app
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
@@ -9,25 +9,27 @@ import android.view.accessibility.AccessibilityEvent
 import android.widget.Toast
 
 /**
- * Dedoom Core Accessibility Service.
+ * Core Accessibility Service operating on the reverse-engineered ScrollGuard engine.
  *
- * Rules:
- * 1. Stories and Messages are NEVER blocked.
+ * Operational Rules:
+ * 1. Stories and Direct Messages (DMs) are NEVER blocked.
  * 2. Allows watching up to 10 distinct reels per day.
- * 3. Hysteresis & Signature tracking prevent false rapid increments or shutting down after 1 reel.
- * 4. Once 10 reels are watched today, blocks reels completely until tomorrow.
- * 5. Resets only on the next day (midnight).
+ * 3. Hysteresis & Signature verification prevent false increments on UI redraws.
+ * 4. Once 10 reels are watched today, enforces INSTANT BLOCK (GLOBAL_ACTION_BACK + Blocked Screen).
+ * 5. Daily counter resets automatically at midnight.
  */
-class DedoomAccessibilityService : AccessibilityService() {
+class DescrollAccessibilityService : AccessibilityService() {
 
     companion object {
-        private const val TAG = "DedoomService"
+        private const val TAG = "DescrollService"
 
         var currentForegroundPackage: String? = null
             private set
 
-        var instance: DedoomAccessibilityService? = null
+        var instance: DescrollAccessibilityService? = null
             private set
+
+        fun isRunning(): Boolean = instance != null
     }
 
     private lateinit var tracker: UsageTracker
@@ -44,13 +46,13 @@ class DedoomAccessibilityService : AccessibilityService() {
         super.onCreate()
         instance = this
         tracker = UsageTracker(this)
-        Log.d(TAG, "Dedoom Accessibility Service created")
+        Log.d(TAG, "Descroll Accessibility Service initialized")
     }
 
     override fun onDestroy() {
         super.onDestroy()
         instance = null
-        Log.d(TAG, "Dedoom Accessibility Service destroyed")
+        Log.d(TAG, "Descroll Accessibility Service destroyed")
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -62,7 +64,6 @@ class DedoomAccessibilityService : AccessibilityService() {
         when (event.eventType) {
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
                 currentForegroundPackage = packageName
-
                 if (packageName in tracker.getMonitoredPackages()) {
                     checkReelsStatus(packageName)
                 }
@@ -71,7 +72,7 @@ class DedoomAccessibilityService : AccessibilityService() {
             AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
                 if (packageName in tracker.getMonitoredPackages()) {
                     val now = System.currentTimeMillis()
-                    if (now - lastDetectionCheckTime > 500L) {
+                    if (now - lastDetectionCheckTime > 400L) {
                         lastDetectionCheckTime = now
                         checkReelsStatus(packageName)
                     }
@@ -87,7 +88,7 @@ class DedoomAccessibilityService : AccessibilityService() {
     }
 
     override fun onInterrupt() {
-        Log.d(TAG, "Dedoom Accessibility Service interrupted")
+        Log.d(TAG, "Descroll Accessibility Service interrupted")
     }
 
     /**
@@ -99,7 +100,6 @@ class DedoomAccessibilityService : AccessibilityService() {
 
         if (!isReels) {
             // Hysteresis: Require 3 consecutive non-reels frames before marking as exited
-            // This prevents UI loading hiccups from causing false session exits and re-entries
             consecutiveNonReelsFrames++
             if (consecutiveNonReelsFrames >= 3) {
                 isCurrentlyInReels = false
@@ -111,9 +111,9 @@ class DedoomAccessibilityService : AccessibilityService() {
         consecutiveNonReelsFrames = 0
         val now = System.currentTimeMillis()
 
-        // 1. If daily limit of 10 reels is reached: BLOCK IMMEDIATELY
+        // 1. If daily limit of 10 reels is reached: INSTANT BLOCK
         if (tracker.isDailyLimitReached()) {
-            Log.d(TAG, "Daily limit of 10 reels reached! Blocking reels...")
+            Log.d(TAG, "Daily limit reached (${tracker.getMaxReelsPerDay()} reels)! Instant blocking...")
             isCurrentlyInReels = false
             performGlobalAction(GLOBAL_ACTION_BACK)
             launchBlockedScreen(packageName)
@@ -122,14 +122,14 @@ class DedoomAccessibilityService : AccessibilityService() {
 
         val currentSignature = ReelDetector.getReelSignature(rootNode, packageName)
 
-        // 2. If entering reels for the first time in this session
+        // 2. Entering reels for the first time in this session
         if (!isCurrentlyInReels) {
             isCurrentlyInReels = true
             reelsEntryTime = now
             lastReelSignature = currentSignature
 
             val count = tracker.incrementReelWatched()
-            Log.d(TAG, "Started watching Reel #$count / ${tracker.getMaxReelsPerDay()}")
+            Log.d(TAG, "Watching Reel #$count / ${tracker.getMaxReelsPerDay()}")
 
             if (count >= tracker.getMaxReelsPerDay()) {
                 performGlobalAction(GLOBAL_ACTION_BACK)
@@ -138,8 +138,8 @@ class DedoomAccessibilityService : AccessibilityService() {
                 showToast("Reel $count of ${tracker.getMaxReelsPerDay()} today")
             }
         } else {
-            // 3. User is already in reels. If signature changed and user stayed on reel >= 3.5s, count next reel
-            if (currentSignature != null && currentSignature != lastReelSignature && (now - reelsEntryTime >= 3500L)) {
+            // 3. User is actively viewing reels. If signature changed and user stayed on reel >= 3.0s, count next reel
+            if (currentSignature != null && currentSignature != lastReelSignature && (now - reelsEntryTime >= 3000L)) {
                 lastReelSignature = currentSignature
                 reelsEntryTime = now
 
@@ -157,7 +157,7 @@ class DedoomAccessibilityService : AccessibilityService() {
     }
 
     /**
-     * Handles scrolling/swiping between reels with debouncing and signature validation.
+     * Handles scrolling/swiping between reels with debouncing.
      */
     private fun handleReelSwipe(packageName: String) {
         val rootNode = rootInActiveWindow ?: return
@@ -166,7 +166,7 @@ class DedoomAccessibilityService : AccessibilityService() {
         }
 
         val now = System.currentTimeMillis()
-        if (now - lastScrollTime > 3500L) { // Minimum 3.5 seconds between swipes
+        if (now - lastScrollTime > 3000L) {
             lastScrollTime = now
             checkReelsStatus(packageName)
         }
@@ -184,7 +184,6 @@ class DedoomAccessibilityService : AccessibilityService() {
         val intent = Intent(this, BlockedActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             putExtra(BlockedActivity.EXTRA_TARGET_PACKAGE, packageName)
-            putExtra(BlockedActivity.EXTRA_IS_DAILY_LIMIT, true)
         }
         startActivity(intent)
     }
@@ -193,7 +192,7 @@ class DedoomAccessibilityService : AccessibilityService() {
         return packageName.startsWith("com.android.") ||
                 packageName.startsWith("com.samsung.") ||
                 packageName.startsWith("com.sec.") ||
-                packageName == "com.dedoom.app" ||
+                packageName == "com.descroll.app" ||
                 packageName == this.packageName ||
                 packageName == "android" ||
                 packageName.contains("launcher") ||

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_gradient"
@@ -9,42 +10,63 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="24dp">
+        android:padding="20dp">
 
         <!-- Header -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:layout_marginTop="32dp"
-            android:layout_marginBottom="24dp">
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="20dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/dashboard_title"
+                    android:textColor="@color/text_primary"
+                    android:textSize="30sp"
+                    android:textStyle="bold"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="SCROLLGUARD"
+                    android:textColor="@color/cyan_accent"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:background="@drawable/bg_card"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="3dp"
+                    android:paddingBottom="3dp"
+                    android:layout_marginStart="10dp" />
+            </LinearLayout>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/dashboard_title"
-                android:textColor="@color/text_primary"
-                android:textSize="32sp"
-                android:textStyle="bold"
-                android:fontFamily="sans-serif-medium" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/dashboard_subtitle"
+                android:text="Anti-Doomscroll Guardian (Reels, Shorts &amp; TikTok)"
                 android:textColor="@color/text_secondary"
-                android:textSize="14sp"
+                android:textSize="13sp"
                 android:layout_marginTop="4dp" />
         </LinearLayout>
 
-        <!-- Status Card -->
+        <!-- Status Banner -->
         <LinearLayout
             android:id="@+id/statusCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/bg_card"
             android:orientation="horizontal"
-            android:padding="20dp"
+            android:padding="16dp"
             android:gravity="center_vertical"
             android:layout_marginBottom="16dp">
 
@@ -58,14 +80,14 @@
                 android:id="@+id/statusText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/status_inactive"
+                android:text="@string/status_active"
                 android:textColor="@color/text_primary"
-                android:textSize="16sp"
+                android:textSize="15sp"
                 android:layout_marginStart="12dp"
                 android:textStyle="bold" />
         </LinearLayout>
 
-        <!-- Stats Card -->
+        <!-- Today's Activity Card -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -79,30 +101,30 @@
                 android:layout_height="wrap_content"
                 android:text="@string/stats_title"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="17sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="14dp" />
 
-            <!-- Reels Opens -->
+            <!-- Reels Counter -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="12dp">
+                android:layout_marginBottom="10dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="🎬"
-                    android:textSize="24sp" />
+                    android:textSize="26sp" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical"
-                    android:layout_marginStart="12dp">
+                    android:layout_marginStart="14dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -112,28 +134,43 @@
                         android:textSize="13sp" />
 
                     <TextView
-                        android:id="@+id/reelsCountText"
+                        android:id="@+id/reelsRemainingText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="0 / 10"
-                        android:textColor="@color/purple_primary"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
+                        android:text="10 reels remaining today"
+                        android:textColor="@color/cyan_accent"
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
 
-                <!-- Progress bar -->
-                <ProgressBar
-                    android:id="@+id/reelsProgress"
-                    style="?android:attr/progressBarStyleHorizontal"
-                    android:layout_width="100dp"
-                    android:layout_height="8dp"
-                    android:max="10"
-                    android:progress="0"
-                    android:progressTint="@color/purple_primary"
-                    android:progressBackgroundTint="@color/bg_surface" />
+                <TextView
+                    android:id="@+id/reelsCountText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 / 10"
+                    android:textColor="@color/text_primary"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
             </LinearLayout>
 
-            <!-- Times Blocked -->
+            <ProgressBar
+                android:id="@+id/reelsProgress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="8dp"
+                android:max="10"
+                android:progress="0"
+                android:progressTint="@color/purple_primary"
+                android:progressBackgroundTint="@color/bg_card_secondary"
+                android:layout_marginBottom="16dp" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/bg_surface"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Interceptions Counter -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -146,33 +183,27 @@
                     android:text="🛡️"
                     android:textSize="24sp" />
 
-                <LinearLayout
+                <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:orientation="vertical"
-                    android:layout_marginStart="12dp">
+                    android:text="@string/total_blocks_label"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
+                    android:layout_marginStart="14dp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/total_blocks_label"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/blocksCountText"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="0"
-                        android:textColor="@color/cyan_accent"
-                        android:textSize="22sp"
-                        android:textStyle="bold" />
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/blocksCountText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Setup Card -->
+        <!-- Permissions Setup Section -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -186,27 +217,26 @@
                 android:layout_height="wrap_content"
                 android:text="@string/setup_title"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="17sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="14dp" />
 
-            <!-- Accessibility Service Toggle -->
+            <!-- Accessibility Button -->
             <LinearLayout
                 android:id="@+id/btnAccessibility"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:padding="12dp"
-                android:layout_marginBottom="8dp"
-                android:clickable="true"
-                android:focusable="true">
+                android:background="?android:attr/selectableItemBackground"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
 
                 <View
                     android:id="@+id/accessibilityDot"
                     android:layout_width="10dp"
                     android:layout_height="10dp"
-                    android:background="@color/status_blocked" />
+                    android:background="@color/status_active" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -220,40 +250,50 @@
                         android:layout_height="wrap_content"
                         android:text="@string/setup_accessibility"
                         android:textColor="@color/text_primary"
-                        android:textSize="15sp" />
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/setup_accessibility_desc"
                         android:textColor="@color/text_muted"
-                        android:textSize="12sp" />
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
 
                 <TextView
+                    android:id="@+id/accessibilityStatusText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="→"
-                    android:textColor="@color/text_muted"
-                    android:textSize="20sp" />
+                    android:text="Enabled"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
             </LinearLayout>
 
-            <!-- Overlay Permission -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/bg_surface"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- Overlay Button -->
             <LinearLayout
                 android:id="@+id/btnOverlay"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:padding="12dp"
-                android:clickable="true"
-                android:focusable="true">
+                android:background="?android:attr/selectableItemBackground"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
 
                 <View
                     android:id="@+id/overlayDot"
                     android:layout_width="10dp"
                     android:layout_height="10dp"
-                    android:background="@color/status_blocked" />
+                    android:background="@color/status_active" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -267,26 +307,86 @@
                         android:layout_height="wrap_content"
                         android:text="@string/setup_overlay"
                         android:textColor="@color/text_primary"
-                        android:textSize="15sp" />
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/setup_overlay_desc"
                         android:textColor="@color/text_muted"
-                        android:textSize="12sp" />
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
 
                 <TextView
+                    android:id="@+id/overlayStatusText"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="→"
-                    android:textColor="@color/text_muted"
-                    android:textSize="20sp" />
+                    android:text="Granted"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/bg_surface"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- Battery Optimization Button -->
+            <LinearLayout
+                android:id="@+id/btnBattery"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="?android:attr/selectableItemBackground"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp">
+
+                <View
+                    android:id="@+id/batteryDot"
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:background="@color/status_active" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="12dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/setup_battery"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/setup_battery_desc"
+                        android:textColor="@color/text_muted"
+                        android:textSize="12sp"
+                        android:layout_marginTop="2dp" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/batteryStatusText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Optimized"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Monitored Apps Card -->
+        <!-- Monitored Apps -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -300,74 +400,220 @@
                 android:layout_height="wrap_content"
                 android:text="@string/monitored_apps_title"
                 android:textColor="@color/text_primary"
-                android:textSize="18sp"
+                android:textSize="17sp"
                 android:textStyle="bold"
-                android:layout_marginBottom="16dp" />
+                android:layout_marginBottom="14dp" />
 
-            <!-- Instagram Toggle -->
+            <!-- Instagram -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginBottom="12dp">
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="📷"
-                    android:textSize="24sp" />
+                    android:text="📸"
+                    android:textSize="22sp" />
 
-                <TextView
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Instagram"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:layout_marginStart="12dp" />
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Instagram Reels"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="DMs &amp; Stories are never blocked"
+                        android:textColor="@color/text_muted"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/switchInstagram"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="true" />
+                    android:layout_height="wrap_content" />
             </LinearLayout>
 
-            <!-- YouTube Toggle -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/bg_surface"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- YouTube -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="▶️"
-                    android:textSize="24sp" />
+                    android:textSize="22sp" />
 
-                <TextView
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="YouTube"
-                    android:textColor="@color/text_primary"
-                    android:textSize="16sp"
-                    android:layout_marginStart="12dp" />
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="YouTube Shorts"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Regular videos are never blocked"
+                        android:textColor="@color/text_muted"
+                        android:textSize="12sp" />
+                </LinearLayout>
 
                 <com.google.android.material.materialswitch.MaterialSwitch
                     android:id="@+id/switchYoutube"
                     android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/bg_surface"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- TikTok -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checked="true" />
+                    android:text="🎵"
+                    android:textSize="22sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="TikTok"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Feed videos monitored"
+                        android:textColor="@color/text_muted"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchTiktok"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/bg_surface"
+                android:layout_marginTop="6dp"
+                android:layout_marginBottom="6dp" />
+
+            <!-- Facebook -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📘"
+                    android:textSize="22sp" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:layout_marginStart="14dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Facebook Reels"
+                        android:textColor="@color/text_primary"
+                        android:textSize="15sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Main feed and groups unaffected"
+                        android:textColor="@color/text_muted"
+                        android:textSize="12sp" />
+                </LinearLayout>
+
+                <com.google.android.material.materialswitch.MaterialSwitch
+                    android:id="@+id/switchFacebook"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Bottom spacer -->
-        <View
+        <!-- Testing / Reset Button -->
+        <TextView
+            android:id="@+id/btnResetCounters"
             android:layout_width="match_parent"
-            android:layout_height="48dp" />
+            android:layout_height="wrap_content"
+            android:text="@string/reset_counters_label"
+            android:textColor="@color/cyan_accent"
+            android:textSize="14sp"
+            android:gravity="center"
+            android:padding="14dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:layout_marginBottom="32dp" />
 
     </LinearLayout>
 </ScrollView>

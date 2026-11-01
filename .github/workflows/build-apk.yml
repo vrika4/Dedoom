@@ -1,4 +1,4 @@
-name: Build Dedoom APK
+name: Build Descroll APK
 
 on:
   push:
@@ -35,45 +35,47 @@ jobs:
       - name: Prepare APKs
         run: |
           mkdir -p dist
-          # Copy whatever release APK Gradle produced
           APK_FILE=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
           if [ -z "$APK_FILE" ]; then
             echo "Error: No APK found in app/build/outputs/apk/release/"
             exit 1
           fi
-          cp "$APK_FILE" dist/Dedoom.apk
-          cp "$APK_FILE" dist/Dedoom-v1.0.0.apk
+          cp "$APK_FILE" dist/Descroll.apk
+          cp "$APK_FILE" dist/Descroll-v2.0.0.apk
           ls -lh dist/
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Dedoom-Release-APK
-          path: dist/Dedoom.apk
+          name: Descroll-Release-APK
+          path: dist/Descroll.apk
           if-no-files-found: error
 
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name != 'main' && github.ref_name || 'v1.0.0' }}
+          tag_name: ${{ github.ref_name != 'main' && github.ref_name || 'v2.0.0' }}
           target_commitish: ${{ github.sha }}
-          name: "Dedoom v1.0.0 (Release)"
+          name: "Descroll v2.0.0 (Release)"
           body: |
-            ### 🧘 Dedoom Android App (Release Build)
-            Official release APK built automatically by GitHub Actions.
+            ### 🛡️ Descroll Android App (Release Build)
+            Reverse-engineered ScrollGuard engine to break doom-scrolling without blocking messaging.
+
+            #### ⚡ Key Features:
+            - **Strict Daily Limit**: Watch up to 10 distinct reels per day. Once reached, instant block kicks in immediately.
+            - **Direct Messages & Stories Free**: DMs, stories, and normal posts are never blocked.
+            - **Reverse-Engineered Detection**: Fast, battery-friendly O(1) accessibility node inspection for Instagram Reels, YouTube Shorts, and TikTok.
 
             #### 📲 Installation Instructions:
-            1. Download **`Dedoom.apk`** below directly to your Android device.
-            2. If tapping the download notification in Chrome doesn't install or loops:
-               - Open your phone's **Files** (or **My Files**) app.
-               - Go to the **Downloads** folder.
-               - Tap **`Dedoom.apk`** to install.
-               - If prompted, toggle on **"Allow from this source"** / **"Install unknown apps"**.
+            1. Download **`Descroll.apk`** below directly to your Android device.
+            2. Open your phone's **Files** (or **My Files**) app -> **Downloads** folder.
+            3. Tap **`Descroll.apk`** to install.
+            4. If prompted, toggle on **"Allow from this source"** / **"Install unknown apps"**.
           draft: false
           prerelease: false
           make_latest: true
           files: |
-            dist/Dedoom.apk
-            dist/Dedoom-v1.0.0.apk
+            dist/Descroll.apk
+            dist/Descroll-v2.0.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

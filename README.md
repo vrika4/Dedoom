@@ -1,36 +1,41 @@
-# Dedoom 🧘‍♂️
-### Personal Anti-Doomscroll Guardian for Android (Instagram & YouTube)
+# Descroll 🛡️
+### Personal Anti-Doomscroll Guardian for Android (Reverse-Engineered ScrollGuard Engine)
 
-Dedoom is your personal Android app built to break mindless reels/shorts addiction without cutting you off from important direct messages.
+**Descroll** is a lightweight, privacy-first Android accessibility guardian designed to break mindless reels/shorts addiction without cutting you off from important direct messages, stories, or regular content.
 
 ---
 
 ## ⚡ How It Works
 
-1. **15-Second Pause**: Whenever you tap Instagram or YouTube, a 15-second breathing screen intercepts the launch.
-2. **Intent Choice**: After the 15-second breathing exercise, two options appear:
-   - 🎬 **Reels / Shorts**: Opens the app with strict limits:
-     - **5 Reels per session**: As soon as you swipe through 5 reels, Dedoom kicks you out and locks the app with a block screen.
-     - **10 Reels opens per day**: Once you use all 10 opens, you cannot open the app for reels until midnight.
-   - 💬 **Messages / Regular Videos**: Opens immediately with **unlimited** access and no restrictions.
-3. **Session Expiry & Daily Lock**:
-   - If you exceed 5 reels or the session timer expires, you are redirected to the **Blocked Screen**.
-   - From the blocked screen, you can go to your home screen or switch directly to **Messages mode**.
+1. **Surgical Reels & Shorts Interception**:
+   - Descroll uses Android's Accessibility Service with exact reverse-engineered node hierarchies (`clips_viewer_view_pager`, `reel_player_page_container`, `player_view`).
+   - Only fullscreen short-video feeds are intercepted.
+2. **Strict Daily Limit (10 Reels/Day)**:
+   - You can watch up to **10 distinct reels per day**.
+   - A non-intrusive HUD toast notifies you of your progress: *(e.g., "Reel 3 of 10 today")*.
+   - Debouncing and content signatures prevent rapid scrolling glitches or counting the same video multiple times.
+3. **Instant Block on Limit**:
+   - The moment you scroll onto or open the **10th reel**, Descroll instantly executes a back navigation action (`GLOBAL_ACTION_BACK`) and displays the **Blocked Screen**.
+   - Reels remain locked until midnight (automatic daily reset).
+4. **Zero Interference with Messages & Stories**:
+   - 💬 **Direct Messages (DMs)**: Private video shares inside chats are exempted via `reply_bar_edittext` and sender tags.
+   - 📸 **Stories**: Instagram and Snapchat stories (`reel_viewer_root`, `stories_tray`, etc.) are completely unrestricted.
+   - 🏠 **Home Feed & Search**: Unhindered browsing.
 
 ---
 
 ## 📦 How to Download or Build the APK
 
 ### Direct Download (GitHub Releases)
-Download **`Dedoom.apk`** directly from the [GitHub Releases](https://github.com/vrika4/Dedoom/releases) section.
+Download **`Descroll.apk`** directly from the [GitHub Releases](https://github.com/vrika4/Descroll/releases) section.
 
 ### Method 1: Using Android Studio
 1. Open **Android Studio**.
 2. Click **Open** and select this directory.
 3. In the top menu, go to **Build** > **Build Bundle(s) / APK(s)** > **Build APK(s)**.
-4. Transfer `Dedoom.apk` to your Android phone.
+4. Transfer `Descroll.apk` to your Android device.
 
-### Method 2: Using Command Line (if Android SDK is installed)
+### Method 2: Command Line (with Android SDK)
 In the project directory, run:
 ```bash
 ./gradlew assembleRelease
@@ -42,9 +47,9 @@ The APK will be generated at:
 
 ## 📱 How to Set Up on Your Phone
 
-Once installed on your phone:
-1. Open **Dedoom**.
-2. Tap **Enable Accessibility Service** -> Find **Dedoom** in your phone's Accessibility settings and toggle it **ON**.
-   > *Note: On Android 13+, if Accessibility is greyed out as a "Restricted Setting", go to Phone Settings > Apps > Dedoom > tap the 3 dots in the top right > tap **"Allow restricted settings"**.*
-3. Tap **Enable Overlay Permission** -> Grant **"Display over other apps"**.
-4. You're all set! Now whenever you open Instagram or YouTube, Dedoom will protect your attention.
+1. Install and open **Descroll**.
+2. Tap **Accessibility Service** -> Find **Descroll** in Accessibility settings and toggle it **ON**.
+   > *Note on Android 13+: If Accessibility is greyed out as a "Restricted Setting", go to Phone Settings > Apps > Descroll > tap the 3 dots in the top right > tap **"Allow restricted settings"**.*
+3. Tap **Display Over Other Apps** -> Grant permission.
+4. Tap **Battery Optimization** -> Set to "Unrestricted" so the OS doesn't kill the background accessibility service.
+5. You're protected! Descroll will quietly guard your attention.
