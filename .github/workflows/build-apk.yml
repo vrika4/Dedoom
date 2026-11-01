@@ -41,7 +41,7 @@ jobs:
             exit 1
           fi
           cp "$APK_FILE" dist/Descroll.apk
-          cp "$APK_FILE" dist/Descroll-v2.0.0.apk
+          cp "$APK_FILE" dist/Descroll-v2.1.0.apk
           ls -lh dist/
 
       - name: Upload APK Artifact
@@ -54,17 +54,25 @@ jobs:
       - name: Create or Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name != 'main' && github.ref_name || 'v2.0.0' }}
+          tag_name: ${{ github.ref_name != 'main' && github.ref_name || 'v2.1.0' }}
           target_commitish: ${{ github.sha }}
-          name: "Descroll v2.0.0 (Release)"
+          name: "Descroll v2.1.0 (Home Feed Shield Release)"
           body: |
-            ### 🛡️ Descroll Android App (Release Build)
-            Reverse-engineered ScrollGuard engine to break doom-scrolling without blocking messaging.
+            ### 🛡️ Descroll Android App v2.1.0
+            Reverse-engineered ScrollGuard engine to break doom-scrolling without blocking messaging or feeds.
 
-            #### ⚡ Key Features:
-            - **Strict Daily Limit**: Watch up to 10 distinct reels per day. Once reached, instant block kicks in immediately.
-            - **Direct Messages & Stories Free**: DMs, stories, and normal posts are never blocked.
-            - **Reverse-Engineered Detection**: Fast, battery-friendly O(1) accessibility node inspection for Instagram Reels, YouTube Shorts, and TikTok.
+            #### ⚡ What's New in v2.1.0:
+            - **Home Feed Black Cover Shield (ScrollGuard Feature)**:
+              - Dynamically places an opaque distraction shield directly over embedded Reels carousels and YouTube Shorts shelves on your home feeds.
+              - Completely obscures autoplaying videos, thumbnails, and dopamine triggers.
+              - Keeps home feed scrolling 100% fluid, natural, and unrestricted.
+            - **Strict Daily Limit (10 Reels/Day)**:
+              - Full-screen reels and shorts are capped at 10 distinct videos per day.
+              - Instant back kickout (`GLOBAL_ACTION_BACK`) + Blocked screen once 10 reels are reached.
+            - **Zero Collateral Blocking**:
+              - Direct Messages (DMs), Stories, regular posts, profiles, and channels are NEVER blocked.
+            - **Toggle Control**:
+              - Enable or disable Home Feed Cover anytime right from the main dashboard.
 
             #### 📲 Installation Instructions:
             1. Download **`Descroll.apk`** below directly to your Android device.
@@ -76,6 +84,6 @@ jobs:
           make_latest: true
           files: |
             dist/Descroll.apk
-            dist/Descroll-v2.0.0.apk
+            dist/Descroll-v2.1.0.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

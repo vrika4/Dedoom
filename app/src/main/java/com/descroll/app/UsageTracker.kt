@@ -8,7 +8,7 @@ import java.util.Locale
 
 /**
  * Thread-safe usage tracker managing daily reel counts, block statistics,
- * and user preferences for monitored applications.
+ * and user preferences for monitored applications and home feed overlays.
  * Automatically resets counts at midnight.
  */
 class UsageTracker(context: Context) {
@@ -26,6 +26,9 @@ class UsageTracker(context: Context) {
         private const val KEY_MONITOR_YOUTUBE = "monitor_youtube"
         private const val KEY_MONITOR_TIKTOK = "monitor_tiktok"
         private const val KEY_MONITOR_FACEBOOK = "monitor_facebook"
+
+        // Home Feed Reels Cover Toggle (ScrollGuard black cover feature)
+        private const val KEY_COVER_HOME_REELS = "cover_home_reels"
 
         // Limit configuration
         private const val KEY_MAX_REELS_PER_DAY = "max_reels_per_day"
@@ -119,6 +122,12 @@ class UsageTracker(context: Context) {
             .putInt(KEY_BLOCKS_TODAY, 0)
             .apply()
     }
+
+    // ─── Home Feed Covers Feature (ScrollGuard) ─────────────────────
+
+    fun isCoverHomeReelsEnabled(): Boolean = prefs.getBoolean(KEY_COVER_HOME_REELS, true)
+    fun setCoverHomeReelsEnabled(enabled: Boolean) =
+        prefs.edit().putBoolean(KEY_COVER_HOME_REELS, enabled).apply()
 
     // ─── Monitored Apps ─────────────────────────────────────────────
 

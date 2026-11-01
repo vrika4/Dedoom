@@ -12,11 +12,13 @@ import android.widget.Toast
  * Core Accessibility Service operating on the reverse-engineered ScrollGuard engine.
  *
  * Operational Rules:
- * 1. Stories and Direct Messages (DMs) are NEVER blocked.
- * 2. Allows watching up to 10 distinct reels per day.
+ * 1. Stories and Direct Messages (DMs) are NEVER blocked or covered.
+ * 2. Allows watching up to 10 distinct full-screen reels per day.
  * 3. Hysteresis & Signature verification prevent false increments on UI redraws.
  * 4. Once 10 reels are watched today, enforces INSTANT BLOCK (GLOBAL_ACTION_BACK + Blocked Screen).
  * 5. Daily counter resets automatically at midnight.
+ * 6. Dynamic Black Cover Overlay: Covers embedded reels carousels and YouTube Shorts shelves
+ *    directly on the Home Feed while keeping feed scrolling 100% fluid and usable.
  */
 class DescrollAccessibilityService : AccessibilityService() {
 
@@ -33,10 +35,12 @@ class DescrollAccessibilityService : AccessibilityService() {
     }
 
     private lateinit var tracker: UsageTracker
+    private lateinit var coverManager: ReelCoverOverlayManager
     private val handler = Handler(Looper.getMainLooper())
 
     private var lastScrollTime = 0L
     private var lastDetectionCheckTime = 0L
+    private var lastCoverScanTime = 0L
     private var isCurrentlyInReels = false
     private var lastReelSignature: String? = null
     private var reelsEntryTime = 0L
@@ -46,11 +50,13 @@ class DescrollAccessibilityService : AccessibilityService() {
         super.onCreate()
         instance = this
         tracker = UsageTracker(this)
+        coverManager = ReelCoverOverlayManager(this)
         Log.d(TAG, "Descroll Accessibility Service initialized")
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        coverManager.onDestroy()
         instance = null
         Log.d(TAG, "Descroll Accessibility Service destroyed")
     }
@@ -59,40 +65,53 @@ class DescrollAccessibilityService : AccessibilityService() {
         if (event == null) return
 
         val packageName = event.packageName?.toString() ?: return
-        if (isSystemPackage(packageName)) return
+        if (isSystemPackage(packageName)) {
+            coverManager.hideAll()
+            return
+        }
+
+        if (packageName !in tracker.getMonitoredPackages()) {
+            coverManager.hideAll()
+            return
+        }
 
         when (event.eventType) {
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
                 currentForegroundPackage = packageName
-                if (packageName in tracker.getMonitoredPackages()) {
-                    checkReelsStatus(packageName)
-                }
+                checkReelsStatus(packageName)
+                checkHomeFeedCovers(packageName)
             }
 
             AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
-                if (packageName in tracker.getMonitoredPackages()) {
-                    val now = System.currentTimeMillis()
-                    if (now - lastDetectionCheckTime > 400L) {
-                        lastDetectionCheckTime = now
-                        checkReelsStatus(packageName)
-                    }
+                val now = System.currentTimeMillis()
+                if (now - lastDetectionCheckTime > 300L) {
+                    lastDetectionCheckTime = now
+                    checkReelsStatus(packageName)
+                }
+                if (now - lastCoverScanTime > 120L) {
+                    lastCoverScanTime = now
+                    checkHomeFeedCovers(packageName)
                 }
             }
 
             AccessibilityEvent.TYPE_VIEW_SCROLLED -> {
-                if (packageName in tracker.getMonitoredPackages()) {
-                    handleReelSwipe(packageName)
-                }
+                handleReelSwipe(packageName)
+                checkHomeFeedCovers(packageName)
+            }
+
+            AccessibilityEvent.TYPE_WINDOWS_CHANGED -> {
+                checkHomeFeedCovers(packageName)
             }
         }
     }
 
     override fun onInterrupt() {
+        coverManager.hideAll()
         Log.d(TAG, "Descroll Accessibility Service interrupted")
     }
 
     /**
-     * Inspects active window to detect if user is in Reels or Shorts.
+     * Inspects active window to detect if user is in full-screen Reels or Shorts.
      */
     private fun checkReelsStatus(packageName: String) {
         val rootNode = rootInActiveWindow ?: return
@@ -115,6 +134,7 @@ class DescrollAccessibilityService : AccessibilityService() {
         if (tracker.isDailyLimitReached()) {
             Log.d(TAG, "Daily limit reached (${tracker.getMaxReelsPerDay()} reels)! Instant blocking...")
             isCurrentlyInReels = false
+            coverManager.hideAll()
             performGlobalAction(GLOBAL_ACTION_BACK)
             launchBlockedScreen(packageName)
             return
@@ -127,6 +147,7 @@ class DescrollAccessibilityService : AccessibilityService() {
             isCurrentlyInReels = true
             reelsEntryTime = now
             lastReelSignature = currentSignature
+            coverManager.hideAll()
 
             val count = tracker.incrementReelWatched()
             Log.d(TAG, "Watching Reel #$count / ${tracker.getMaxReelsPerDay()}")
@@ -153,6 +174,44 @@ class DescrollAccessibilityService : AccessibilityService() {
                     showToast("Reel $count of ${tracker.getMaxReelsPerDay()} today")
                 }
             }
+        }
+    }
+
+    /**
+     * Inspects active window to detect embedded reels/shorts shelves on the Home Feed.
+     * Places distraction-free opaque black covers over them while preserving feed scrolling.
+     */
+    private fun checkHomeFeedCovers(packageName: String) {
+        if (!tracker.isCoverHomeReelsEnabled()) {
+            coverManager.hideAll()
+            return
+        }
+
+        // If user is inside the full-screen reel viewer, hide embedded covers
+        if (isCurrentlyInReels) {
+            coverManager.hideAll()
+            return
+        }
+
+        val rootNode = rootInActiveWindow
+        if (rootNode == null) {
+            coverManager.hideAll()
+            return
+        }
+
+        val dm = resources.displayMetrics
+        val bounds = ReelDetector.findEmbeddedReelBounds(
+            rootNode,
+            packageName,
+            dm.widthPixels,
+            dm.heightPixels
+        )
+
+        if (bounds.isNotEmpty()) {
+            val title = if (packageName.contains("youtube")) "Shorts Hidden" else "Reels Hidden"
+            coverManager.updateCovers(bounds, title)
+        } else {
+            coverManager.hideAll()
         }
     }
 

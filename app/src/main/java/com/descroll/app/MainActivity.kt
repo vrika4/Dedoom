@@ -19,7 +19,7 @@ import com.google.android.material.materialswitch.MaterialSwitch
 /**
  * Main Dashboard Activity for Descroll / ScrollGuard.
  * Displays real-time daily reels usage (0-10), service permissions status,
- * monitored app toggles, and manual test reset.
+ * home feed distraction shield toggle, monitored app switches, and test reset.
  */
 class MainActivity : AppCompatActivity() {
 
@@ -40,6 +40,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var batteryDot: View
 
     // Switches
+    private lateinit var switchCoverHomeReels: MaterialSwitch
     private lateinit var switchInstagram: MaterialSwitch
     private lateinit var switchYoutube: MaterialSwitch
     private lateinit var switchTiktok: MaterialSwitch
@@ -75,6 +76,7 @@ class MainActivity : AppCompatActivity() {
         batteryStatusText = findViewById(R.id.batteryStatusText)
         batteryDot = findViewById(R.id.batteryDot)
 
+        switchCoverHomeReels = findViewById(R.id.switchCoverHomeReels)
         switchInstagram = findViewById(R.id.switchInstagram)
         switchYoutube = findViewById(R.id.switchYoutube)
         switchTiktok = findViewById(R.id.switchTiktok)
@@ -95,6 +97,17 @@ class MainActivity : AppCompatActivity() {
         // Battery optimization exemption button
         findViewById<View>(R.id.btnBattery).setOnClickListener {
             openBatterySettings()
+        }
+
+        // Home Feed Cover Switch (ScrollGuard feature)
+        switchCoverHomeReels.isChecked = tracker.isCoverHomeReelsEnabled()
+        switchCoverHomeReels.setOnCheckedChangeListener { _, isChecked ->
+            tracker.setCoverHomeReelsEnabled(isChecked)
+            Toast.makeText(
+                this,
+                if (isChecked) "Home Feed Reels Cover: Active" else "Home Feed Reels Cover: Disabled",
+                Toast.LENGTH_SHORT
+            ).show()
         }
 
         // App monitor switches
